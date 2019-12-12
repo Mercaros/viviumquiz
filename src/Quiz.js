@@ -1,6 +1,15 @@
 import React, {Component} from 'react';
 import {QuizData} from './QuizData';
 import './Quiz.css';
+import axios from 'axios';
+
+
+const game = {
+    macAddress: "70-45-C4-B8-9C-A4",
+    name: "Medische Rekenen",
+    category: "Quiz"
+};
+
 
 class Quiz extends Component {
 
@@ -11,7 +20,17 @@ class Quiz extends Component {
         options: [],
         quizEnd: false,
         disabled: true,
+        macAddress: "70-45-C4-B8-9C-A4",
+        intervalID: 0,
     };
+
+    registerDevice() {
+            axios.post(`https://vivium.azurewebsites.net/devices/register`, {game})
+                .then(res => {
+                    console.log(res);
+                    console.log(res.data);
+                })        // code block to be executed
+    }
 
     loadQuizData = () => {
         this.setState(() => {
@@ -25,6 +44,8 @@ class Quiz extends Component {
 
     componentDidMount() {
         this.loadQuizData();
+        this.state.intervalID = setInterval(() => this.registerDevice(), 5000)
+
     }
 
     nextQuestionHandler = () => {
@@ -39,6 +60,7 @@ class Quiz extends Component {
             })
         }
     };
+
 
     componentDidUpdate(prevProps, prevState, snapshot) {
         if (this.state.currentQuestion !== prevState.currentQuestion) {
@@ -64,7 +86,15 @@ class Quiz extends Component {
         if (this.state.currentQuestion === QuizData.length - 1) {
             this.setState({
                 quizEnd: true
-            })
+            });
+
+            axios.get(`https://vivium.azurewebsites.net/devices/finish`,this.state.macAddress)
+                .then(res => {
+                    console.log(res);
+                    console.log(res.data);
+                })
+
+            clearInterval(this.state.intervalID);
         }
     };
 
